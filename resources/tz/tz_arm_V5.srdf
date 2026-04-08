@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SRDF for tz_arm_V5 (spherized URDF: tz_spherized.urdf).
+     Minimal: adjacent link pairs only (kinematic chain). -->
+<robot name="tz_arm_V5">
+  <group name="arm">
+    <chain base_link="base_link" tip_link="link_6"/>
+  </group>
+
+  <disable_collisions link1="base_link" link2="link_1" reason="Adjacent"/>
+  <disable_collisions link1="link_1" link2="link_2" reason="Adjacent"/>
+  <disable_collisions link1="link_2" link2="link_3" reason="Adjacent"/>
+  <disable_collisions link1="link_3" link2="link_4" reason="Adjacent"/>
+  <disable_collisions link1="link_4" link2="link_5" reason="Adjacent"/>
+  <disable_collisions link1="link_5" link2="link_6" reason="Adjacent"/>
+</robot>

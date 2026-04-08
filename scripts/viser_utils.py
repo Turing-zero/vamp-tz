@@ -3,6 +3,7 @@ import viser
 import yourdfpy
 from typing import Sequence, Union
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 
 def setup_viser_with_robot(robot_dir, robot_urdf_name):
@@ -35,6 +36,55 @@ def add_point_cloud(
         )
     return point_cloud_handle
 
+
+def add_cuboid(
+    server: viser.ViserServer,
+    center: Union[Sequence[float], np.ndarray],
+    half_extents: Union[Sequence[float], np.ndarray],
+    *,
+    rotation_matrix: np.ndarray | None = None,
+    wxyz: Union[Sequence[float], np.ndarray, None] = None,
+    color: tuple[int, int, int] = (160, 170, 200),
+    opacity: float | None = 0.22,
+    wireframe: bool = True,
+    name: str = "cuboid",
+    ):
+    """在世界系中绘制与 `vamp.Cuboid` 一致的轴对齐盒子（先按半轴长缩放，再旋转、平移）。
+
+    `half_extents` 与 `vamp.Cuboid` 的 `axis_*_r` 相同；`viser` 的 `dimensions` 为全长，故内部用 `2 * half_extents`。
+    姿态为 `rotation_matrix`（3×3，列为局部 x/y/z 在世界系中的方向）或 `wxyz`（viser 约定）；二者均省略则为单位旋转。
+    """
+    c = np.asarray(center, dtype = np.float64).reshape(3)
+    h = np.asarray(half_extents, dtype = np.float64).reshape(3)
+    dimensions = tuple(float(x * 2.0) for x in h.tolist())
+    position = tuple(float(x) for x in c.tolist())
+
+    if wxyz is not None:
+        wq = np.asarray(wxyz, dtype = np.float64).reshape(4)
+        wxyz_t = tuple(float(x) for x in wq)
+    elif rotation_matrix is not None:
+        R = np.asarray(rotation_matrix, dtype = np.float64).reshape(3, 3)
+        T4 = np.eye(4, dtype = np.float64)
+        T4[:3, :3] = R
+        q_xyzw = R.from_matrix(R).as_quat()
+        wxyz_t = (
+            float(q_xyzw[3]),
+            float(q_xyzw[0]),
+            float(q_xyzw[1]),
+            float(q_xyzw[2]),
+            )
+    else:
+        wxyz_t = (1.0, 0.0, 0.0, 0.0)
+
+    return server.scene.add_box(
+        name = name,
+        dimensions = dimensions,
+        position = position,
+        wxyz = wxyz_t,
+        color = tuple(int(x) for x in color),
+        opacity = opacity,
+        wireframe = wireframe,
+        )
 
 def add_spheres(
     server: viser.ViserServer,

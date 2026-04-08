@@ -2,6 +2,11 @@ __all__ = [
     "robots",
     "png_to_heightfield",
     "configure_robot_and_planner_with_kwargs",
+    "load_env_spec",
+    "build_environment_from_spec",
+    "add_visuals_to_viser",
+    "VisualAsset",
+    "VAMPEndEnvConfig",
     "problem_dict_to_vamp",
     "results_to_dict",
     "Environment",
@@ -43,6 +48,14 @@ from ._core import AORRTCSettings as AORRTCSettings
 from ._core import SimplifyRoutine as SimplifyRoutine
 from ._core import SimplifySettings as SimplifySettings
 from ._core import filter_pointcloud as filter_pointcloud
+
+from .env_spec import (  # noqa: E402
+    VisualAsset as VisualAsset,
+    VAMPEndEnvConfig as VAMPEndEnvConfig,
+    add_visuals_to_viser as add_visuals_to_viser,
+    build_environment_from_spec as build_environment_from_spec,
+    load_env_spec as load_env_spec,
+)
 
 robots = _core.robots()
 

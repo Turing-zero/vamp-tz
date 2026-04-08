@@ -1,0 +1,178 @@
+collision:
+  pointcloud:
+  - name: toilet_obstacle
+    path: /home/turingzero/Reconstruction/aligned_pcd/parts/base_final.ply
+    format: ply_mesh_vertices
+    voxel_downsample: 0.01
+    max_points: null
+    r_point: 0.01
+    tf:
+      matrix4x4: &id001
+      - - 1.0
+        - 0.0
+        - 0.0
+        - 0.0
+      - - 0.0
+        - 1.0
+        - 0.0
+        - 0.0
+      - - 0.0
+        - 0.0
+        - 1.0
+        - 0.0
+      - - 0.0
+        - 0.0
+        - 0.0
+        - 1.0
+  cuboid:
+  - name: plane_0
+    center: &id002
+    - 0.4000000000000001
+    - 0.08
+    - -0.44999999999999994
+    euler_xyz: &id003
+    - -0.061313056733636226
+    - 0.0421693430879051
+    - -0.0746267590992055
+    half_extents: &id004
+    - 1.0283780934898523
+    - 0.631334941244398
+    - 0.01
+  - name: plane_1
+    center: &id005
+    - 1.4600000000000002
+    - 0.06
+    - 0.5900000000000001
+    euler_xyz: &id006
+    - -0.8364969674804162
+    - -1.493740645941804
+    - 0.7675995127643259
+    half_extents: &id007
+    - 1.079796998164345
+    - 0.6125211599953151
+    - 0.01
+  - name: plane_2
+    center: &id008
+    - -0.5599999999999994
+    - 0.19999999999999998
+    - 0.6900000000000001
+    euler_xyz: &id009
+    - -2.1366254450666293
+    - 1.5091539534000096
+    - -2.2074024711504325
+    half_extents: &id010
+    - 1.079796998164345
+    - 0.612521159995315
+    - 0.01
+  - name: plane_3
+    center: &id011
+    - 0.5
+    - 0.19999999999999915
+    - 1.7100000000000008
+    euler_xyz: &id012
+    - 3.0874741984630845
+    - 0.05307962177959946
+    - -0.07392877454478985
+    half_extents: &id013
+    - 1.0283780934898523
+    - 0.6125211599953149
+    - 0.01
+  - name: plane_4
+    center: &id014
+    - 0.4100000000000001
+    - -0.490000000000001
+    - 0.6799999999999999
+    euler_xyz: &id015
+    - -1.624941803046232
+    - 0.053057283131467736
+    - -0.07453839603828483
+    half_extents: &id016
+    - 1.0283780934898523
+    - 1.0999999999999996
+    - 0.01
+visual:
+  cuboid:
+  - name: /bounds/plane_0
+    center: *id002
+    euler_xyz: *id003
+    half_extents: *id004
+    color:
+    - 140
+    - 150
+    - 170
+    opacity: 0.22
+    wireframe: false
+  - name: /bounds/plane_1
+    center: *id005
+    euler_xyz: *id006
+    half_extents: *id007
+    color:
+    - 140
+    - 150
+    - 170
+    opacity: 0.22
+    wireframe: false
+  - name: /bounds/plane_2
+    center: *id008
+    euler_xyz: *id009
+    half_extents: *id010
+    color:
+    - 140
+    - 150
+    - 170
+    opacity: 0.22
+    wireframe: false
+  - name: /bounds/plane_3
+    center: *id011
+    euler_xyz: *id012
+    half_extents: *id013
+    color:
+    - 140
+    - 150
+    - 170
+    opacity: 0.22
+    wireframe: false
+  - name: /bounds/plane_4
+    center: *id014
+    euler_xyz: *id015
+    half_extents: *id016
+    color:
+    - 140
+    - 150
+    - 170
+    opacity: 0.22
+    wireframe: false
+  pointcloud:
+  - name: /vis/obstacle_pc
+    path: /home/turingzero/Reconstruction/aligned_pcd/parts/base_final.ply
+    format: ply_mesh_vertices
+    voxel_downsample: 0.01
+    max_points: null
+    point_size: 0.01
+    colors:
+    - 160
+    - 160
+    - 160
+    tf:
+      matrix4x4: *id001
+  gaussian:
+  - name: /bg_gs
+    ply_path: /home/turingzero/Downloads/point_cloud_clean2.ply
+    tf:
+      matrix4x4:
+      - - -0.23982197
+        - -0.01090206
+        - -0.02132272
+        - -0.17683691
+      - - 0.02156626
+        - -0.00501817
+        - -0.23999543
+        - 0.17982363
+      - - 0.01041199
+        - -0.24071571
+        - 0.00596886
+        - -0.56401321
+      - - 0.0
+        - 0.0
+        - 0.0
+        - 1.0
