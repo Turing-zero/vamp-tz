@@ -18,7 +18,7 @@ struct TZ
     static constexpr std::size_t resolution = 32;
 
     static constexpr std::array<std::string_view, dimension> joint_names = {"joint_1", "joint_2", "joint_3", "joint_4", "joint_5", "joint_6"};
-    static constexpr char* end_effector = "joint_6";
+    static constexpr char* end_effector = "link_6";
 
     using Configuration = FloatVector<dimension>;
     using ConfigurationArray = std::array<FloatT, dimension>;
@@ -14148,7 +14148,7 @@ if (sphere_sphere_self_collision<decltype(x[0])>(y[156],
 
 
 
-        // attaching at joint_6
+        // attaching at link_6
         set_attachment_pose(environment, to_isometry(&y[168]));
 
         //

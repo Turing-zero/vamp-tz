@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SRDF for tz_arm_V5 (spherized URDF: tz_spherized.urdf).
+     Minimal: adjacent link pairs only (kinematic chain). -->
+<robot name="dual_tz5">
+  <disable_collisions link1="RightArm_Base_Link" link2="RightArm_Link1" reason="Adjacent"/>
+  <disable_collisions link1="RightArm_Base_Link" link2="RightArm_Link2" reason="Never"/>
+  <disable_collisions link1="RightArm_Link1" link2="RightArm_Link2" reason="Adjacent"/>
+  <disable_collisions link1="RightArm_Link2" link2="RightArm_Link3" reason="Adjacent"/>
+  <disable_collisions link1="RightArm_Link2" link2="RightArm_Link4" reason="Never"/>
+  <disable_collisions link1="RightArm_Link3" link2="RightArm_Link4" reason="Adjacent"/>
+  <disable_collisions link1="RightArm_Link4" link2="RightArm_Link5" reason="Adjacent"/>
+  <disable_collisions link1="RightArm_Link5" link2="RightArm_Link6" reason="Adjacent"/>
+
+  <disable_collisions link1="LeftArm_Base_Link" link2="LeftArm_Link1" reason="Adjacent"/>
+  <disable_collisions link1="LeftArm_Base_Link" link2="LeftArm_Link2" reason="Never"/>
+  <disable_collisions link1="LeftArm_Link1" link2="LeftArm_Link2" reason="Adjacent"/>
+  <disable_collisions link1="LeftArm_Link2" link2="LeftArm_Link3" reason="Adjacent"/>
+  <disable_collisions link1="LeftArm_Link2" link2="LeftArm_Link4" reason="Never"/>
+  <disable_collisions link1="LeftArm_Link3" link2="LeftArm_Link4" reason="Adjacent"/>
+  <disable_collisions link1="LeftArm_Link4" link2="LeftArm_Link5" reason="Adjacent"/>
+  <disable_collisions link1="LeftArm_Link5" link2="LeftArm_Link6" reason="Adjacent"/>
+</robot>
