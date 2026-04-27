@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Literal, Sequence
@@ -88,17 +89,34 @@ class VAMPEndEnvConfig:
     default_point_radius: float = 0.01
     T_world_to_robot: np.ndarray = field(default_factory=lambda: np.eye(4, dtype=np.float64))
 
-    _cached_env: vamp.Environment | None = field(default=None, init=False, repr=False)
-    _cached_visuals: list[VisualAsset] | None = field(default=None, init=False, repr=False)
+    _cached_env:     vamp.Environment | None     = field(default=None,  init=False, repr=False)
+    _cached_visuals: list[VisualAsset] | None    = field(default=None,  init=False, repr=False)
+
+    # 动态障碍物层（与静态场景完全隔离）
+    # 重建只在 set_dynamic_pointcloud() 里发生一次，get_planning_environment() 零开销
+    _dynamic_pc:        list | None = field(default=None,  init=False, repr=False)
+    _dynamic_r_point:   float       = field(default=0.01,  init=False, repr=False)
+    _planning_env:      Any         = field(default=None,  init=False, repr=False)
+    # 最后一次动态点云更新的时间戳（time.time()）；None 表示当前无动态障碍物
+    _pc_timestamp:      float | None = field(default=None, init=False, repr=False)
 
     @classmethod
     def init_from_config(
         cls,
-        path: str | Path,
+        path: str | Path | None,
         *,
         robot_module: Any | None = None,
         default_point_radius: float = 0.01,
     ) -> VAMPEndEnvConfig:
+        # 兼容：允许不提供 config（返回空 environment）
+        if path is None:
+            return cls(
+                spec={},
+                base_dir=Path.cwd(),
+                robot_module=robot_module,
+                default_point_radius=float(default_point_radius),
+            )
+
         p = Path(path)
         spec = load_env_spec(p)
         return cls(
@@ -151,9 +169,12 @@ class VAMPEndEnvConfig:
             self.T_world_to_robot = _tf_from_spec(tf)
         else:
             self.T_world_to_robot = _as_T_4x4(tf)
-        # 变换改变后，缓存失效
+        # 变换改变后，缓存失效（动态点云坐标系也失效）
         self._cached_env = None
         self._cached_visuals = None
+        self._planning_env = None
+        self._dynamic_pc = None
+        self._pc_timestamp = None
 
     def get_world_to_robot(self) -> np.ndarray:
         return np.asarray(self.T_world_to_robot, dtype=np.float64)
@@ -172,14 +193,75 @@ class VAMPEndEnvConfig:
 
     def get_viser_visual(self) -> list[VisualAsset]:
         if self._cached_visuals is None:
-            _env, visuals = build_environment_from_spec(
-                self._spec_with_resolved_paths(),
-                robot_module=self.robot_module,
-                default_point_radius=self.default_point_radius,
-                global_T_world_to_robot=self.T_world_to_robot,
-            )
-            self._cached_visuals = visuals
+            self.get_environment()  # 顺便填充 _cached_env，避免重复 build
         return self._cached_visuals
+
+    def _rebuild_planning_env(self) -> None:
+        """从静态缓存出发，叠加动态点云，生成规划专用 Environment。
+        静态 _cached_env 永远不会被动态点云污染。"""
+        # 确保静态环境已构建
+        static_env = self.get_environment()
+
+        if self._dynamic_pc is None:
+            # 无动态障碍物：规划环境就是静态环境本身（零开销）
+            self._planning_env = static_env
+            return
+
+        # 有动态点云：必须重建一个全新实例（vamp.Environment 不可拷贝）
+        env, _ = build_environment_from_spec(
+            self._spec_with_resolved_paths(),
+            robot_module=self.robot_module,
+            default_point_radius=self.default_point_radius,
+            global_T_world_to_robot=self.T_world_to_robot,
+        )
+
+        pts = np.asarray(self._dynamic_pc, dtype=np.float32)
+        if self.robot_module is not None and hasattr(self.robot_module, "min_max_radii"):
+            r_min, r_max = self.robot_module.min_max_radii()
+        else:
+            r_min = r_max = self._dynamic_r_point
+        env.add_pointcloud(pts.tolist(), float(r_min), float(r_max), float(self._dynamic_r_point))
+
+        self._planning_env = env
+
+    def set_dynamic_pointcloud(
+        self,
+        pts: np.ndarray | list | None,
+        r_point: float = 0.01,
+    ) -> None:
+        """更新动态点云并立即重建规划环境（两次更新之间只构建一次）。
+
+        Args:
+            pts:     (N,3) float32 点云，机器人基座系。传 None 表示清除。
+            r_point: 每个点的碰撞球半径（米）。
+        """
+        if pts is None:
+            self._dynamic_pc = None
+            self._pc_timestamp = None
+        else:
+            arr = np.asarray(pts, dtype=np.float32)
+            if arr.ndim != 2 or arr.shape[1] != 3:
+                raise ValueError(f"动态点云需要 (N,3)，但得到 {arr.shape}")
+            self._dynamic_pc = arr.tolist()
+            self._pc_timestamp = time.time()
+        self._dynamic_r_point = float(r_point)
+        self._rebuild_planning_env()
+
+    def get_planning_environment(self) -> vamp.Environment:
+        """返回规划专用 Environment（含动态障碍物）。零开销：环境在 set_dynamic_pointcloud() 时已预建。"""
+        if self._planning_env is None:
+            self._rebuild_planning_env()
+        return self._planning_env
+
+    def get_dynamic_pointcloud(self) -> np.ndarray | None:
+        """返回当前动态点云（N,3) float32，基座系。无动态障碍物时返回 None。"""
+        if self._dynamic_pc is None:
+            return None
+        return np.asarray(self._dynamic_pc, dtype=np.float32)
+
+    def get_pc_timestamp(self) -> float | None:
+        """返回最后一次动态点云更新的时间戳（time.time()）。无障碍物时返回 None。"""
+        return self._pc_timestamp
 
     def _spec_with_resolved_paths(self) -> dict[str, Any]:
         """
@@ -221,9 +303,10 @@ def load_env_spec(path: str | Path) -> dict[str, Any]:
     - collision: 用于构建 vamp.Environment
     - visual: 用于 viser 可视化（可选）
     """
-    p = Path(path)
-    if not p.exists():
-        raise FileNotFoundError(str(p))
+    p = Path(path) if path is not None else None
+    if p is None or not p.exists():
+        print("File not found, no obstacle added")
+        return {}
 
     suffix = p.suffix.lower().lstrip(".")
     if suffix == "json":
